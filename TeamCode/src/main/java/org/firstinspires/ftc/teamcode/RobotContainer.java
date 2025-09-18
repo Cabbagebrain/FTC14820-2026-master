@@ -35,7 +35,7 @@ public class RobotContainer extends LinearOpMode {
 
         while (opModeIsActive()) {
             left = -gamepad1.left_stick_y;
-            right = gamepad1.left_stick_x;
+            right = gamepad1.right_stick_y;
 
             leftDrive.setPower(left);
             rightDrive.setPower(right);
