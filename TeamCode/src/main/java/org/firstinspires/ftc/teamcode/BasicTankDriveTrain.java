@@ -7,7 +7,8 @@ public class BasicTankDriveTrain {
     /*
     double left;
     double right;
-    public void initDrive(Gamepad gamepad, IMU imu, double x, double y) {
+    public void initDrive(Gamepad gamepad, IMU imu, double left, double right) {
+
     }
     public void Drive() {
 
