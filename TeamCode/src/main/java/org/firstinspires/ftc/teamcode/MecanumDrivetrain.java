@@ -27,9 +27,9 @@ public class MecanumDrivetrain {
         backRight = backRightMotor;
     }
 
-    public void setPower(Gamepad gamepad1, IMU imu, double x, double y, double rx) {
+    public void setPower(IMU imu, double x, double y, double rx) {
         botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-        rx -= rx * 2;
+        rx = -rx;
         // Rotate the movement direction counter to the bot's rotation
         rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
         rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
