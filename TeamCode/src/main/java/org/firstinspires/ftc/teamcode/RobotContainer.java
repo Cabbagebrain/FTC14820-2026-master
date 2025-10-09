@@ -1,4 +1,9 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode;;
+
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.TARGET_ANGLE;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -6,11 +11,12 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
 public class RobotContainer extends LinearOpMode {
@@ -21,9 +27,11 @@ public class RobotContainer extends LinearOpMode {
     private DcMotor backLeft;
     private DcMotor backRight;
     private ElapsedTime runtime;
+    private double lastLoopTime;
     private double x;
     private double y;
     private double rx;
+    private PIDController pidController;
     private Limelight3A limelight;
     private LLResult result;
 
@@ -34,31 +42,21 @@ public class RobotContainer extends LinearOpMode {
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
-
-        //retrieve motors from hardware map
-        frontLeft = hardwareMap.get(DcMotor.class, "frontleft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontright");
-        backLeft = hardwareMap.get(DcMotor.class, "backleft");
-        backRight = hardwareMap.get(DcMotor.class, "backright");
-
-        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        //init subsystems
-        MecanumDrivetrain drivetrain = new MecanumDrivetrain(frontLeft, frontRight, backLeft, backRight);
-
+        //init limelight
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
+
+        //init PID
+        pidController = new PIDController(KP, KI, KD);
+        pidController.setTarget(TARGET_ANGLE);
+
+        //init subsystems
+        MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
 
         runtime = new ElapsedTime();
         waitForStart();
@@ -66,13 +64,22 @@ public class RobotContainer extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            double currentTime = runtime.seconds();
+            double deltaTime = currentTime - lastLoopTime;
+            lastLoopTime = currentTime;
+
             if(gamepad1.left_stick_button) {
                 imu.resetYaw();
             }
 
+            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double rx = gamepad1.right_stick_x + pidOutput;
+
+            if (gamepad1.options) {
+                imu.resetYaw();
+            }
 
             drivetrain.setPower(imu, x, y, rx);
             drivetrain.drive();
@@ -91,8 +98,15 @@ public class RobotContainer extends LinearOpMode {
             } else {
                 telemetry.addData("Limelight" , "No targets");
             }
+            telemetry.addData("PID Output", pidOutput);
 
             telemetry.update();
         }
+    }
+
+    //returns current angle heading, normalized to {-180, 180]
+    private double getHeadingDegrees() {
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        return orientation.getYaw(AngleUnit.DEGREES);
     }
 }

@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -20,11 +22,20 @@ public class MecanumDrivetrain {
     private double rotX;
     private double rotY;
     private double botHeading;
-    public MecanumDrivetrain(DcMotor frontLeftMotor , DcMotor frontRightMotor, DcMotor backLeftMotor, DcMotor backRightMotor) {
-        frontLeft = frontLeftMotor;
-        frontRight = frontRightMotor;
-        backLeft = backLeftMotor;
-        backRight = backRightMotor;
+    public MecanumDrivetrain(HardwareMap hardwareMap) {
+        //retrieve motors from hardware map
+        frontLeft = hardwareMap.get(DcMotor.class, "frontleft");
+        frontRight = hardwareMap.get(DcMotor.class, "frontright");
+        backLeft = hardwareMap.get(DcMotor.class, "backleft");
+        backRight = hardwareMap.get(DcMotor.class, "backright");
+
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setPower(IMU imu, double x, double y, double rx) {
