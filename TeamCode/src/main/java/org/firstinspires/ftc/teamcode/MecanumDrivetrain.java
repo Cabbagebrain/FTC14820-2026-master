@@ -20,10 +20,10 @@ public class MecanumDrivetrain {
 
     public MecanumDrivetrain(HardwareMap hardwareMap) {
         //retrieve motors from hardware map
-        frontLeft = hardwareMap.get(DcMotor.class, "frontleft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontright");
-        backLeft = hardwareMap.get(DcMotor.class, "backleft");
-        backRight = hardwareMap.get(DcMotor.class, "backright");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontleft"); //port 0
+        frontRight = hardwareMap.get(DcMotor.class, "frontright"); //port 1
+        backLeft = hardwareMap.get(DcMotor.class, "backleft"); //port 2
+        backRight = hardwareMap.get(DcMotor.class, "backright"); //port 3
 
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

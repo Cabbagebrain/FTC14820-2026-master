@@ -30,6 +30,7 @@ public class RobotContainer extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                //TODO make this accurate to the new hub orientation
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
@@ -91,8 +92,6 @@ public class RobotContainer extends LinearOpMode {
                 telemetry.addData("Limelight" , "No targets");
             }
             telemetry.addData("PID Output", pidOutput);
-            telemetry.addData("Correction (PID + KF)", correction);
-            telemetry.addData("Target Angle", pidController.getTarget());
             telemetry.addData("Current Angle", getHeadingDegrees());
 
 

@@ -104,6 +104,7 @@ public class LivePIDTuner extends LinearOpMode {
             // Telemetry
             telemetry.addData("Current Heading", getHeadingDegrees());
             telemetry.addData("Correction (PID + KF)", correction);
+            telemetry.addData("Target Angle", pidController.getTarget());
             telemetry.addData("PID Output", pidOutput);
             telemetry.addData("Kp", Kp);
             telemetry.addData("Ki", Ki);
