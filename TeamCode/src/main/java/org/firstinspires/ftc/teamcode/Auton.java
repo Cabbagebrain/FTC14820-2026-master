@@ -8,16 +8,22 @@ import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp
-public class RobotContainer extends LinearOpMode {
+@Autonomous
+@Disabled
+public class Auton extends LinearOpMode {
     private IMU imu;
     private double lastLoopTime;
     private double x;
@@ -25,14 +31,14 @@ public class RobotContainer extends LinearOpMode {
     private double rx;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() throws InterruptedException{
         // Retrieve the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 //TODO make this accurate to the new hub orientation
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP));
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
@@ -55,14 +61,10 @@ public class RobotContainer extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        while (opModeIsActive()) {
+        if (opModeIsActive()) {
             double currentTime = runtime.seconds();
             double deltaTime = currentTime - lastLoopTime;
             lastLoopTime = currentTime;
-
-            if(gamepad1.left_stick_button) {
-                imu.resetYaw();
-            }
 
             double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
@@ -73,39 +75,8 @@ public class RobotContainer extends LinearOpMode {
                 correction += Math.copySign(KF, pidOutput);
             }
 
-            y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            x = gamepad1.left_stick_x;
-            rx = gamepad1.right_stick_x;
-
-            if (gamepad1.options) {
-                imu.resetYaw();
-            }
-
-            drivetrain.setPower(imu, x, y, rx);
-            drivetrain.drive();
-
-            if (gamepad1.dpad_down) {
-                ramp.dropRamp();
-            }
-            if (gamepad1.dpad_up) {
-                ramp.liftRamp();
-            }
-
-            //TODO: change trigger to button and figure out correct values for power
-            if (gamepad1.right_trigger > 0) {
-                shintake.runFlywheel(gamepad1.right_trigger);
-            } else {
-                shintake.stopFlywheel();
-            }
-
-            if (gamepad1.left_trigger > 0) {
-                shintake.runIntake(gamepad1.left_trigger);
-            } else {
-                shintake.stopIntake();
-            }
-
+            //telemetry
             LLResult result = limelight.getLatestResult();
-
             if (result.isValid()) {
                 telemetry.addData("Target X", result.getTx());
                 telemetry.addData("Target Y", result.getTy());
@@ -115,10 +86,12 @@ public class RobotContainer extends LinearOpMode {
             }
             telemetry.addData("PID Output", pidOutput);
             telemetry.addData("Current Angle", getHeadingDegrees());
-
-
-            telemetry.update();
         }
+    }
+
+    private void Drive(double power, double rightIn, double leftIn) {
+        double rightTarget;
+        double leftTarget;
     }
     private double getHeadingDegrees() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();

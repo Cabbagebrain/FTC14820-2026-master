@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
-public class RobotContainer extends LinearOpMode {
+public class AprilTagTest extends LinearOpMode{
     private IMU imu;
     private double lastLoopTime;
     private double x;
@@ -31,8 +31,8 @@ public class RobotContainer extends LinearOpMode {
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 //TODO make this accurate to the new hub orientation
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP));
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
@@ -47,8 +47,6 @@ public class RobotContainer extends LinearOpMode {
 
         //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
-        RampSubsystem ramp = new RampSubsystem(hardwareMap);
-        ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -83,26 +81,6 @@ public class RobotContainer extends LinearOpMode {
 
             drivetrain.setPower(imu, x, y, rx);
             drivetrain.drive();
-
-            if (gamepad1.dpad_down) {
-                ramp.dropRamp();
-            }
-            if (gamepad1.dpad_up) {
-                ramp.liftRamp();
-            }
-
-            //TODO: change trigger to button and figure out correct values for power
-            if (gamepad1.right_trigger > 0) {
-                shintake.runFlywheel(gamepad1.right_trigger);
-            } else {
-                shintake.stopFlywheel();
-            }
-
-            if (gamepad1.left_trigger > 0) {
-                shintake.runIntake(gamepad1.left_trigger);
-            } else {
-                shintake.stopIntake();
-            }
 
             LLResult result = limelight.getLatestResult();
 
