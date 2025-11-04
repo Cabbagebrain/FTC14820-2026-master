@@ -9,6 +9,9 @@ public class ShintakeSubsystem {
     public ShintakeSubsystem(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotor.class, "intake"); //port 0
         flywheel = hardwareMap.get(DcMotor.class, "flywheel"); //port 1
+
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void runIntake(double power) {

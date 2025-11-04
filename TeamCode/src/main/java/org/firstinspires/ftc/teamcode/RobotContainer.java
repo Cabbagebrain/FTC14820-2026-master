@@ -29,11 +29,11 @@ public class RobotContainer extends LinearOpMode {
         // Retrieve the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
+        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 //TODO make this accurate to the new hub orientation
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
-        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
         //init limelight
@@ -77,12 +77,12 @@ public class RobotContainer extends LinearOpMode {
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            if (gamepad1.options) {
-                imu.resetYaw();
-            }
-
             drivetrain.setPower(imu, x, y, rx);
-            drivetrain.drive();
+            if (gamepad1.a) {
+                drivetrain.slowDrive();
+            } else {
+                drivetrain.drive();
+            }
 
             if (gamepad1.dpad_down) {
                 ramp.dropRamp();
@@ -91,7 +91,8 @@ public class RobotContainer extends LinearOpMode {
                 ramp.liftRamp();
             }
 
-            //TODO: change trigger to button and figure out correct values for power
+            //TODO: change trigger to button and figure out correct values for power at least for runFlywheel()
+            //it will probably be the maximum value, but it depends on what changes are made to the motors
             if (gamepad1.right_trigger > 0) {
                 shintake.runFlywheel(gamepad1.right_trigger);
             } else {
