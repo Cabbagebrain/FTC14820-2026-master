@@ -11,5 +11,9 @@ public class Constants {
         //anti-windup: max output [0.0, 1.0]
         public static final double MAX_PID_OUTPUT = 1.0;
     }
-
+    public static class AprilConstants {
+        //TODO: calibrate these
+        public static final double REFERENCE_DISTANCE = 0.0;
+        public static final double REFERENCE_TA = 0.0;
+    }
 }

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_DISTANCE;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_TA;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KF;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
@@ -24,16 +26,24 @@ public class AprilTagTest extends LinearOpMode{
     private double y;
     private double rx;
 
+    // Adjust these numbers to suit your robot.
+    //  Set the GAIN constants to control the relationship between the measured position error, and how much power is
+    //  applied to the drive motors to correct the error.
+    //  Drive = Error * Gain    Make these values smaller for smoother control, or larger for a more aggressive response.
+    final double SPEED_GAIN  =  0.02  ;   //  Forward Speed Control "Gain". e.g. Ramp up to 50% power at a 25 inch error.   (0.50 / 25.0)
+    final double STRAFE_GAIN =  0.015 ;   //  Strafe Speed Control "Gain".  e.g. Ramp up to 37% power at a 25 degree Yaw error.   (0.375 / 25.0)
+    final double TURN_GAIN   =  0.01  ;   //  Turn Control "Gain".  e.g. Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
+
     @Override
     public void runOpMode() throws InterruptedException {
         // Retrieve the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
+        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 //TODO make this accurate to the new hub orientation
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
-        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
 
         //init limelight
@@ -47,6 +57,8 @@ public class AprilTagTest extends LinearOpMode{
 
         //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
+        RampSubsystem ramp = new RampSubsystem(hardwareMap);
+        ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -75,14 +87,80 @@ public class AprilTagTest extends LinearOpMode{
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            if (gamepad1.options) {
-                imu.resetYaw();
+            drivetrain.setPower(imu, x, y, rx);
+            if (gamepad1.left_bumper) {
+                drivetrain.slowDrive();
+            } else {
+                drivetrain.drive();
             }
 
-            drivetrain.setPower(imu, x, y, rx);
-            drivetrain.drive();
+            if (gamepad1.dpad_down) {
+                ramp.dropRamp();
+            }
+            if (gamepad1.dpad_up) {
+                ramp.liftRamp();
+            }
+
+            //TODO: change trigger to button and figure out correct values for power at least for runFlywheel()
+            //it will probably be the maximum value, but it depends on what changes are made to the motors
+            if (gamepad1.right_trigger > 0) {
+                shintake.runFlywheel(gamepad1.right_trigger);
+            } else {
+                shintake.stopFlywheel();
+            }
+
+            if (gamepad1.left_trigger > 0) {
+                shintake.runIntake(gamepad1.left_trigger);
+            } else {
+                shintake.stopIntake();
+            }
 
             LLResult result = limelight.getLatestResult();
+
+            if(result.isValid() && gamepad1.right_bumper) {
+                double TURN_TOLERANCE_DEG = 1.0;     // stop turning when within 1°
+                double AREA_TOLERANCE = 0.05;        // acceptable ± range for tag area
+
+                double MIN_TURN_POWER = 0.08;
+                double MAX_TURN_POWER = 0.4;
+
+                double MIN_DRIVE_POWER = 0.08;
+                double MAX_DRIVE_POWER = 0.5;
+
+                double DESIRED_AREA = distanceToArea(80.0);
+
+                double tx = result.getTx();
+                double ty = result.getTy();
+                double ta = result.getTa();
+
+
+                double headingError = tx;             // positive if tag is right of center
+                double areaError = DESIRED_AREA - ta; // positive if too far
+
+                double turnPower = -headingError * TURN_GAIN;  // rotate to center tag
+                double drivePower = areaError * SPEED_GAIN;    // move forward/back
+
+                // --- CLAMP & DEADZONE ---
+                double absTurn = Math.abs(turnPower);
+                if (absTurn < MIN_TURN_POWER && absTurn > 0.01) turnPower = Math.copySign(MIN_TURN_POWER, turnPower);
+                if (absTurn > MAX_TURN_POWER) turnPower = Math.copySign(MAX_TURN_POWER, turnPower);
+
+                double absDrive = Math.abs(drivePower);
+                if (absDrive < MIN_DRIVE_POWER && absDrive > 0.01) drivePower = Math.copySign(MIN_DRIVE_POWER, drivePower);
+                if (absDrive > MAX_DRIVE_POWER) drivePower = Math.copySign(MAX_DRIVE_POWER, drivePower);
+
+                // --- STOP CONDITIONS ---
+                boolean aligned = Math.abs(headingError) < TURN_TOLERANCE_DEG;
+                boolean atDistance = Math.abs(areaError) < AREA_TOLERANCE;
+                if (!aligned) {
+                    rx = turnPower;
+                } else if (!atDistance) {
+                    y = drivePower;
+                    rx = turnPower * 0.5; // small correction while moving
+                } else {
+                    drivetrain.stop();
+                }
+            }
 
             if (result.isValid()) {
                 telemetry.addData("Target X", result.getTx());
@@ -94,12 +172,14 @@ public class AprilTagTest extends LinearOpMode{
             telemetry.addData("PID Output", pidOutput);
             telemetry.addData("Current Angle", getHeadingDegrees());
 
-
             telemetry.update();
         }
     }
     private double getHeadingDegrees() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         return orientation.getYaw(AngleUnit.DEGREES);
+    }
+    private double distanceToArea(double desiredDistance) {
+        return REFERENCE_DISTANCE * Math.pow(REFERENCE_TA / desiredDistance, 2.0);
     }
 }
