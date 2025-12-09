@@ -46,19 +46,15 @@ public class AprilTagTest extends LinearOpMode{
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
 
-        //init limelight
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
 
-        //init PID
-        PIDController pidController = new PIDController(KP, KI, KD);
-        pidController.setTarget(90);
-
-        //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
+        PIDController pidController = new PIDController(KP, KI, KD);
+        pidController.setTarget(90);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -136,8 +132,5 @@ public class AprilTagTest extends LinearOpMode{
     private double getHeadingDegrees() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         return orientation.getYaw(AngleUnit.DEGREES);
-    }
-    private double distanceToArea(double desiredDistance) {
-        return REFERENCE_DISTANCE * Math.pow(REFERENCE_TA / desiredDistance, 2.0);
     }
 }
