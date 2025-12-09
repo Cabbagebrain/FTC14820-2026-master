@@ -101,65 +101,25 @@ public class AprilTagTest extends LinearOpMode{
                 ramp.liftRamp();
             }
 
-            //TODO: change trigger to button and figure out correct values for power at least for runFlywheel()
-            //it will probably be the maximum value, but it depends on what changes are made to the motors
             if (gamepad1.right_trigger > 0) {
-                shintake.runFlywheel(gamepad1.right_trigger);
-            } else {
+                shintake.runFlywheel(.7);
+            } else if (gamepad1.right_trigger == 0 && !gamepad1.right_bumper){
                 shintake.stopFlywheel();
             }
 
             if (gamepad1.left_trigger > 0) {
-                shintake.runIntake(gamepad1.left_trigger);
-            } else {
+                shintake.runIntake(.75);
+            } else if (gamepad1.left_trigger == 0 && !gamepad1.right_bumper) {
                 shintake.stopIntake();
             }
 
-            LLResult result = limelight.getLatestResult();
-
-           // telemetry.addData("Pipeline", result.getPipeline());
-          //  telemetry.addData("TV", result.getTv());
-            telemetry.addData("Valid", result.isValid());
-            telemetry.addData("TA", result.getTa());
-            telemetry.addData("TX", result.getTx());
-            telemetry.update();
-
-            if(result.isValid() && gamepad1.right_bumper) {
-                double DESIRED_AREA = distanceToArea(80.0);
-
-                double tx = result.getTx();
-                double ty = result.getTy();
-                double ta = result.getTa();
-
-
-                double headingError = tx;             // positive if tag is right of center
-                double areaError = DESIRED_AREA - ta; // positive if too far
-
-                double turnPower = -headingError * TURN_GAIN;  // rotate to center tag
-                double drivePower = areaError * SPEED_GAIN;    // move forward/back
-
-                // --- CLAMP & DEADZONE ---
-                double absTurn = Math.abs(turnPower);
-                if (absTurn < MIN_TURN_POWER && absTurn > 0.01) turnPower = Math.copySign(MIN_TURN_POWER, turnPower);
-                if (absTurn > MAX_TURN_POWER) turnPower = Math.copySign(MAX_TURN_POWER, turnPower);
-
-                double absDrive = Math.abs(drivePower);
-                if (absDrive < MIN_DRIVE_POWER && absDrive > 0.01) drivePower = Math.copySign(MIN_DRIVE_POWER, drivePower);
-                if (absDrive > MAX_DRIVE_POWER) drivePower = Math.copySign(MAX_DRIVE_POWER, drivePower);
-
-                // --- STOP CONDITIONS ---
-                boolean aligned = Math.abs(headingError) < TURN_TOLERANCE_DEG;
-                boolean atDistance = Math.abs(areaError) < AREA_TOLERANCE;
-                if (!aligned) {
-                    rx = turnPower;
-                } else if (!atDistance) {
-                    y = drivePower;
-                    rx = turnPower * 0.5; // small correction while moving
-                } else {
-                    drivetrain.stop();
-                }
+            if (gamepad1.right_bumper) {
+                shintake.topIntake();
+            } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0){
+                shintake.stopAll();
             }
 
+            LLResult result = limelight.getLatestResult();
             if (result.isValid()) {
                 telemetry.addData("Target X", result.getTx());
                 telemetry.addData("Target Y", result.getTy());
