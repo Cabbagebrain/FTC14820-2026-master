@@ -29,4 +29,15 @@ public class ShintakeSubsystem {
     public void stopFlywheel() {
         flywheel.setPower(0);
     }
+
+    public void stopAll() {
+        stopFlywheel();
+        stopIntake();
+    }
+
+    public void topIntake() {
+        runFlywheel(-1);
+        runIntake(-0.5);
+    }
+
 }

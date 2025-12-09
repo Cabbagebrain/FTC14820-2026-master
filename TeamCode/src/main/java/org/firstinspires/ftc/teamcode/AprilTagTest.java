@@ -1,7 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.AREA_TOLERANCE;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_DRIVE_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_TURN_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_DRIVE_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_TURN_POWER;
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_DISTANCE;
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_TA;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_GAIN;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_TOLERANCE_DEG;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.SPEED_GAIN;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KF;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
@@ -25,14 +33,6 @@ public class AprilTagTest extends LinearOpMode{
     private double x;
     private double y;
     private double rx;
-
-    // Adjust these numbers to suit your robot.
-    //  Set the GAIN constants to control the relationship between the measured position error, and how much power is
-    //  applied to the drive motors to correct the error.
-    //  Drive = Error * Gain    Make these values smaller for smoother control, or larger for a more aggressive response.
-    final double SPEED_GAIN  =  0.02  ;   //  Forward Speed Control "Gain". e.g. Ramp up to 50% power at a 25 inch error.   (0.50 / 25.0)
-    final double STRAFE_GAIN =  0.015 ;   //  Strafe Speed Control "Gain".  e.g. Ramp up to 37% power at a 25 degree Yaw error.   (0.375 / 25.0)
-    final double TURN_GAIN   =  0.01  ;   //  Turn Control "Gain".  e.g. Ramp up to 25% power at a 25 degree error. (0.25 / 25.0)
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -117,16 +117,14 @@ public class AprilTagTest extends LinearOpMode{
 
             LLResult result = limelight.getLatestResult();
 
+           // telemetry.addData("Pipeline", result.getPipeline());
+          //  telemetry.addData("TV", result.getTv());
+            telemetry.addData("Valid", result.isValid());
+            telemetry.addData("TA", result.getTa());
+            telemetry.addData("TX", result.getTx());
+            telemetry.update();
+
             if(result.isValid() && gamepad1.right_bumper) {
-                double TURN_TOLERANCE_DEG = 1.0;     // stop turning when within 1°
-                double AREA_TOLERANCE = 0.05;        // acceptable ± range for tag area
-
-                double MIN_TURN_POWER = 0.08;
-                double MAX_TURN_POWER = 0.4;
-
-                double MIN_DRIVE_POWER = 0.08;
-                double MAX_DRIVE_POWER = 0.5;
-
                 double DESIRED_AREA = distanceToArea(80.0);
 
                 double tx = result.getTx();

@@ -1,5 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.AREA_TOLERANCE;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_DRIVE_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_TURN_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_DRIVE_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_TURN_POWER;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.SPEED_GAIN;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_GAIN;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_TOLERANCE_DEG;
+
+import static java.lang.Thread.sleep;
+
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -40,6 +52,17 @@ public class MecanumDrivetrain {
     }
 
     public void setPower(IMU imu, double x, double y, double rx) {
+        double rotX = x;
+        double rotY = -y;
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+
+        flPower = (rotY - rotX + rx) / denominator;
+        blPower = (rotY + rotX + rx) / denominator;
+        frPower = (rotY - rotX - rx) / denominator;
+        brPower = (rotY + rotX - rx) / denominator;
+
+        /*
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         rx = -rx;
         // Rotate the movement direction counter to the bot's rotation
@@ -53,7 +76,25 @@ public class MecanumDrivetrain {
         blPower = (rotY + rotX + rx) / denominator;
         frPower = (rotY - rotX - rx) / denominator;
         brPower = (rotY + rotX - rx) / denominator;
+         */
     }
+    /*
+    public void turn(IMU imu, double rx) {
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        rx = -rx;
+        // Rotate the movement direction counter to the bot's rotation
+        double rotX = 0;
+        double rotY = 0;
+
+        rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        flPower = (rotY - rotX + rx) / denominator;
+        blPower = (rotY + rotX + rx) / denominator;
+        frPower = (rotY - rotX - rx) / denominator;
+        brPower = (rotY + rotX - rx) / denominator;
+    }
+    */
 
     public void drive() {
         frontLeft.setPower(flPower);
@@ -69,12 +110,111 @@ public class MecanumDrivetrain {
         backLeft.setPower(blPower / 2);
         backRight.setPower(brPower / 2);
     }
-
-
     public void stop() {
         frontLeft.setPower(0);
         frontRight.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
     }
+
+    public void forward(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(power);
+        frontRight.setPower(power);
+        backLeft.setPower(power);
+        backRight.setPower(power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+    public void back(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(-power);
+        frontRight.setPower(-power);
+        backLeft.setPower(-power);
+        backRight.setPower(-power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+    public void strafeLeft(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(-power);
+        frontRight.setPower(-power);
+        backLeft.setPower(power);
+        backRight.setPower(-power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+    public void strafeRight(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(power);
+        frontRight.setPower(-power);
+        backLeft.setPower(-power);
+        backRight.setPower(power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+    public void turnLeft(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(-power);
+        backLeft.setPower(-power);
+        frontRight.setPower(power);
+        backRight.setPower(power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+    public void turnRight(double power, double sec) throws InterruptedException {
+        frontLeft.setPower(power);
+        backLeft.setPower(power);
+        frontRight.setPower(-power);
+        backRight.setPower(-power);
+        Thread.sleep((long) sec * 1000);
+        stop();
+    }
+
+
+    /*
+    public void alignToShoot(LLResult result, double distance) {
+        double x = 0;
+        double y = 0;
+        double rx = 0;
+
+        if(result.isValid()) {
+            double DESIRED_AREA = distanceToArea(80.0);
+
+            double tx = result.getTx();
+            double ty = result.getTy();
+            double ta = result.getTa();
+
+
+            double headingError = tx;             // positive if tag is right of center
+            double areaError = DESIRED_AREA - ta; // positive if too far
+
+            double turnPower = -headingError * TURN_GAIN;  // rotate to center tag
+            double drivePower = areaError * SPEED_GAIN;    // move forward/back
+
+            // --- CLAMP & DEADZONE ---
+            double absTurn = Math.abs(turnPower);
+            if (absTurn < MIN_TURN_POWER && absTurn > 0.01)
+                turnPower = Math.copySign(MIN_TURN_POWER, turnPower);
+            if (absTurn > MAX_TURN_POWER) turnPower = Math.copySign(MAX_TURN_POWER, turnPower);
+
+            double absDrive = Math.abs(drivePower);
+            if (absDrive < MIN_DRIVE_POWER && absDrive > 0.01)
+                drivePower = Math.copySign(MIN_DRIVE_POWER, drivePower);
+            if (absDrive > MAX_DRIVE_POWER) drivePower = Math.copySign(MAX_DRIVE_POWER, drivePower);
+
+            // --- STOP CONDITIONS ---
+            boolean aligned = Math.abs(headingError) < TURN_TOLERANCE_DEG;
+            boolean atDistance = Math.abs(areaError) < AREA_TOLERANCE;
+            if (!aligned) {
+                rx = turnPower;
+            } else if (!atDistance) {
+                y = drivePower;
+                rx = turnPower * 0.5; // small correction while moving
+            } else {
+                stop();
+            }
+        }
+    }
+    */
 }

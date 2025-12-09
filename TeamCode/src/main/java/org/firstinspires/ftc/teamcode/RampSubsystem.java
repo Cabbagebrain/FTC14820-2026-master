@@ -9,6 +9,7 @@ public class RampSubsystem {
 
     //TODO figure out the pos servo needs to turn to lift ramp
     private final double liftpos = 0;
+    private final double droppos = 0;
 
     //Note
     public RampSubsystem(HardwareMap hardwareMap) {
@@ -21,12 +22,12 @@ public class RampSubsystem {
     }
 
     public void liftRamp() {
-        rightServo.setPosition(liftpos);
-        leftServo.setPosition(liftpos);
+        rightServo.setPosition(0.0);
+        leftServo.setPosition(0.15);
     }
 
     public void dropRamp() {
-        rightServo.setPosition(0);
-        leftServo.setPosition(0);
+        rightServo.setPosition(0.55);
+        leftServo.setPosition(0.7);
     }
 }

@@ -10,7 +10,7 @@ dpad_up - lift ramp
 dpad_right
 dpad_left
 left_bumper - hold for slow mode
-right_bumper
+right_bumper - hold for top intake
 left_stick_button - reset yaw
 right_stick_button
 right_trigger - flywheel
