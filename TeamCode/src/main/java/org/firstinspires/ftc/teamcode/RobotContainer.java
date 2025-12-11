@@ -42,7 +42,6 @@ public class RobotContainer extends LinearOpMode {
 
         //init PID
         PIDController pidController = new PIDController(KP, KI, KD);
-        pidController.setTarget(90);
 
         //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
@@ -63,7 +62,7 @@ public class RobotContainer extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
+            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
             double correction = pidOutput;
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).

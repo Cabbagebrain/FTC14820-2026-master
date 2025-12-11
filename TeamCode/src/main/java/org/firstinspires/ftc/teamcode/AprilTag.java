@@ -9,8 +9,12 @@ public class AprilTag {
         return 0;
     }
 
+    public void faceTag(double desiredTa) {
+
+    }
+
     //TODO: create lineup, maybe remove target tx and target ty for now
-    public void AprilTagLineup(int targetTag, double targetTx, double targetTy, double targetTa) {
+    public void aprilTagLineup(int targetTag, double targetTx, double targetTy, double targetTa) {
 
     }
 

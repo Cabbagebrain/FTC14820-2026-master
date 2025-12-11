@@ -87,7 +87,7 @@ public class BlueGoalAuto extends LinearOpMode {
             double deltaTime = currentTime - lastLoopTime;
             lastLoopTime = currentTime;
 
-            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
+            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
             double correction = pidOutput;
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
@@ -98,7 +98,7 @@ public class BlueGoalAuto extends LinearOpMode {
 
             //align to shoot
             drivetrain.back(.75, 1.92);
-            pidController.setTarget(-47);
+            pidController.setAngleTarget(-47);
             drivetrain.setPower(imu, 0, 0, correction);
 
             shintake.runFlywheel(1);
@@ -110,7 +110,7 @@ public class BlueGoalAuto extends LinearOpMode {
             shintake.stopIntake();
             ramp.dropRamp();
 
-            pidController.setTarget(-90);
+            pidController.setAngleTarget(-90);
             drivetrain.setPower(imu, 0 ,0, correction);
 
 
@@ -123,7 +123,7 @@ public class BlueGoalAuto extends LinearOpMode {
             // go back to shooting zone
             drivetrain.back(.75,.4);
             drivetrain.strafeRight(.75,.4);
-            pidController.setTarget(-47);
+            pidController.setAngleTarget(-47);
             drivetrain.setPower(imu, 0, 0, correction);
             drivetrain.back(.5, .3);
 

@@ -54,7 +54,7 @@ public class AprilTagTest extends LinearOpMode{
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
         PIDController pidController = new PIDController(KP, KI, KD);
-        pidController.setTarget(90);
+        pidController.setAngleTarget(90);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -70,7 +70,7 @@ public class AprilTagTest extends LinearOpMode{
                 imu.resetYaw();
             }
 
-            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
+            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
             double correction = pidOutput;
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
@@ -117,6 +117,7 @@ public class AprilTagTest extends LinearOpMode{
 
             LLResult result = limelight.getLatestResult();
             if (result.isValid()) {
+                telemetry.addData("Is Valid?", result.isValid());
                 telemetry.addData("Target X", result.getTx());
                 telemetry.addData("Target Y", result.getTy());
                 telemetry.addData("Target Area", result.getTa()); //percent of space an april tag takes up in the screen

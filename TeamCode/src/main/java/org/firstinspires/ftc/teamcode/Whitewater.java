@@ -56,7 +56,7 @@ public class Whitewater extends LinearOpMode {
             double deltaTime = currentTime - lastLoopTime;
             lastLoopTime = currentTime;
 
-            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
+            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
             double correction = pidOutput;
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).

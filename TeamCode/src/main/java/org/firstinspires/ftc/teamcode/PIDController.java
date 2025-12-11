@@ -23,12 +23,16 @@ public class PIDController {
         previousDerivative = 0;
     }
 
-    public void setTarget(double initTarget) {
+    public void setAngleTarget(double initTarget) {
         // Normalizes the target to [-180, 180] degrees
         target = normalizeAngle(initTarget);
         integral = 0;
         previousError = 0;
         previousDerivative = 0;
+    }
+
+    public void setDistTarget(double initTarget) {
+        target = initTarget;
     }
     public void setPID(double initkp, double initki, double initkd) {
         kp = initkp;
@@ -36,7 +40,7 @@ public class PIDController {
         kd = initkd;
     }
 
-    public double getTarget() {
+    public double getTarget(){
         return target;
     }
 
@@ -51,8 +55,23 @@ public class PIDController {
         return mod;
     }
 
-    //calculates PID output power
-    public double calculateOutput(double currentValue, double deltaTime) {
+    //calculates PID output power for drive. currentDist is in inches.
+    public double calculateDriveOutput(double currentDist, double deltaTime) {
+        double error = target - currentDist;
+
+        integral += error * deltaTime;
+        integral = Math.max(-0.5, Math.min(0.5, integral)); // anti-windup clamp
+
+        double derivative = (error - previousError) / deltaTime;
+        previousError = error;
+
+        double output = (kp * error) + (ki * integral) + (kd * derivative);
+        output = Math.max(-1.0, Math.min(1.0, output));
+        return output;
+    }
+
+    //calculates PID output power for heading
+    public double calculateHeadingOutput(double currentValue, double deltaTime) {
         double error = target - currentValue;
         error = normalizeAngle(error);
 

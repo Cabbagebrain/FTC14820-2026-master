@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
-public class LivePIDTuner extends LinearOpMode {
+public class LiveHeadingPIDTuner extends LinearOpMode {
     private IMU imu;
     private double lastLoopTime;
     private double x;
@@ -44,7 +44,7 @@ public class LivePIDTuner extends LinearOpMode {
 
         //init PID
         PIDController pidController = new PIDController(Kp, Ki, Kd);
-        pidController.setTarget(90);
+        pidController.setAngleTarget(90);
 
         // Motor initialization
         frontLeft = hardwareMap.get(DcMotor.class, "frontleft");
@@ -74,7 +74,7 @@ public class LivePIDTuner extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            double pidOutput = pidController.calculateOutput(getHeadingDegrees(), deltaTime);
+            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
             // APPLY FEEDFORWARD (KF)
             double correction = pidOutput;
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
