@@ -67,7 +67,7 @@ public class PIDController {
 
         double output = (kp * error) + (ki * integral) + (kd * derivative);
         output = Math.max(-1.0, Math.min(1.0, output));
-        return output;
+        return -output;
     }
 
     //calculates PID output power for heading

@@ -32,7 +32,7 @@ public class LiveDrivePIDTuner extends LinearOpMode {
     private List<Integer> lastVels = new ArrayList<>();
 
     // PID Coefficients
-    private double Kp = 0.001;
+    private double Kp = 0.01;
     private double Ki = 0;
     private double Kd = 0;
 
@@ -97,13 +97,6 @@ public class LiveDrivePIDTuner extends LinearOpMode {
                 br /= max;
             }
 
-            if (gamepad1.a) {
-                frontLeft.setPower(fl);
-                frontRight.setPower(fr);
-                backLeft.setPower(bl);
-                backRight.setPower(br);
-            }
-
             if (gamepad1.dpad_up) {
                 Kp += delta;
                 sleep(150);
@@ -124,13 +117,18 @@ public class LiveDrivePIDTuner extends LinearOpMode {
                 Kd += delta;
                 sleep(150);
             }
-            if (gamepad1.a) {
+            if (gamepad1.b) {
                 Kd = Math.max(0, Kd - delta);
                 sleep(150);
             }
 
             pidController.setPID(Kp, Ki, Kd);  // Update PID with new values
-
+            if (gamepad1.a) {
+                frontLeft.setPower(fl);
+                frontRight.setPower(fr);
+                backLeft.setPower(bl);
+                backRight.setPower(br);
+            }
             // Telemetry
             telemetry.addData("Target Distance (in)", pidController.getTarget());
             telemetry.addData("Current Distance (in)", currentDistance);
@@ -149,5 +147,4 @@ public class LiveDrivePIDTuner extends LinearOpMode {
         double right = wheelPositions.get(1);
         return (left + right) / 2.0; // average distance in inches
     }
-
 }
