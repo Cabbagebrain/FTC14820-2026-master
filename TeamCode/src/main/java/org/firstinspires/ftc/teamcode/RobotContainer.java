@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KF;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KF;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -41,7 +41,7 @@ public class RobotContainer extends LinearOpMode {
         limelight.start(); // This tells Limelight to start looking!
 
         //init PID
-        PIDController pidController = new PIDController(KP, KI, KD);
+        PIDController pidController = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
 
         //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
@@ -68,7 +68,7 @@ public class RobotContainer extends LinearOpMode {
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
             if (Math.abs(pidOutput) > 0.01) {
                 // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(KF, pidOutput);
+                correction += Math.copySign(HEADING_KF, pidOutput);
             }
 
             y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed

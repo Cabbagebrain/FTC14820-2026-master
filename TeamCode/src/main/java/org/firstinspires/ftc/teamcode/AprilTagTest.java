@@ -10,10 +10,10 @@ import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_GAIN;
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_TOLERANCE_DEG;
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.SPEED_GAIN;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KF;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KF;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -53,7 +53,7 @@ public class AprilTagTest extends LinearOpMode{
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
-        PIDController pidController = new PIDController(KP, KI, KD);
+        PIDController pidController = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
         pidController.setAngleTarget(90);
 
         ElapsedTime runtime = new ElapsedTime();
@@ -76,7 +76,7 @@ public class AprilTagTest extends LinearOpMode{
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
             if (Math.abs(pidOutput) > 0.01) {
                 // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(KF, pidOutput);
+                correction += Math.copySign(HEADING_KF, pidOutput);
             }
 
             y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
