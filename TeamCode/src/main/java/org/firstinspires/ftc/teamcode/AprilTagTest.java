@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -33,6 +34,15 @@ public class AprilTagTest extends LinearOpMode{
     private double x;
     private double y;
     private double rx;
+    // Adjust these numbers to suit your robot.
+    //todo: find these values
+    final double DESIRED_TX = 0.0;     // centered
+    final double DESIRED_TA = 2.5;     // tune this experimentally
+
+    final double MAX_AUTO_SPEED = 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
+    final double MAX_AUTO_STRAFE= 0.5;   //  Clip the strafing speed to this max value (adjust for your robot)
+    final double MAX_AUTO_TURN  = 0.3;   //  Clip the turn speed to this max value (adjust for your robot)
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -53,8 +63,13 @@ public class AprilTagTest extends LinearOpMode{
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
-        PIDController pidController = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
-        pidController.setAngleTarget(90);
+
+        PIDController strafePID = new PIDController(0.035, 0.0, 0.003);
+        PIDController drivePID  = new PIDController(0.06,  0.0, 0.004);
+        PIDController headingPID= new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
+        strafePID.setDistTarget(0.0);        // tx centered
+        drivePID.setDistTarget(DESIRED_TA);  // desired tag area
+        headingPID.setAngleTarget(getHeadingDegrees()); // lock heading
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -70,52 +85,63 @@ public class AprilTagTest extends LinearOpMode{
                 imu.resetYaw();
             }
 
-            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
-            // APPLY FEEDFORWARD (KF)
-            double correction = pidOutput;
-            // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
-            if (Math.abs(pidOutput) > 0.01) {
-                // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(HEADING_KF, pidOutput);
-            }
-
-            y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            x = gamepad1.left_stick_x;
-            rx = gamepad1.right_stick_x;
-
-            drivetrain.setPower(imu, x, y, rx);
-            if (gamepad1.left_bumper) {
-                drivetrain.slowDrive();
-            } else {
-                drivetrain.drive();
-            }
-
-            if (gamepad1.dpad_down) {
-                ramp.dropRamp();
-            }
-            if (gamepad1.dpad_up) {
-                ramp.liftRamp();
-            }
-
-            if (gamepad1.right_trigger > 0) {
-                shintake.runFlywheel(.7);
-            } else if (gamepad1.right_trigger == 0 && !gamepad1.right_bumper){
-                shintake.stopFlywheel();
-            }
-
-            if (gamepad1.left_trigger > 0) {
-                shintake.runIntake(.75);
-            } else if (gamepad1.left_trigger == 0 && !gamepad1.right_bumper) {
-                shintake.stopIntake();
-            }
-
-            if (gamepad1.right_bumper) {
-                shintake.topIntake();
-            } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0){
-                shintake.stopAll();
-            }
-
             LLResult result = limelight.getLatestResult();
+
+            if (result.isValid() && gamepad1.a) {
+                double txError = result.getTx() - DESIRED_TX;
+                double taError = DESIRED_TA - result.getTa(); // inverted on purpose
+
+                // STRAFE PID (tx)
+                double strafePower = strafePID.calculateDriveOutput(result.getTx(), deltaTime);
+                // DRIVE PID (ta)
+                double drivePower = drivePID.calculateDriveOutput(result.getTa(), deltaTime);
+                // HEADING PID
+                double turnPower = headingPID.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
+
+                // Clamp outputs
+                strafePower = Range.clip(strafePower, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
+                drivePower  = Range.clip(drivePower,  -MAX_AUTO_SPEED,  MAX_AUTO_SPEED);
+                turnPower   = Range.clip(turnPower,   -MAX_AUTO_TURN,   MAX_AUTO_TURN);
+
+                drivetrain.setPower(imu, strafePower, drivePower, turnPower);
+            } else {
+                y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+                x = gamepad1.left_stick_x;
+                rx = gamepad1.right_stick_x;
+
+                drivetrain.setPower(imu, x, y, rx);
+                if (gamepad1.left_bumper) {
+                    drivetrain.slowDrive();
+                } else {
+                    drivetrain.drive();
+                }
+
+                if (gamepad1.dpad_down) {
+                    ramp.dropRamp();
+                }
+                if (gamepad1.dpad_up) {
+                    ramp.liftRamp();
+                }
+
+                if (gamepad1.right_trigger > 0) {
+                    shintake.runFlywheel(.7);
+                } else if (gamepad1.right_trigger == 0 && !gamepad1.right_bumper){
+                    shintake.stopFlywheel();
+                }
+
+                if (gamepad1.left_trigger > 0) {
+                    shintake.runIntake(.75);
+                } else if (gamepad1.left_trigger == 0 && !gamepad1.right_bumper) {
+                    shintake.stopIntake();
+                }
+
+                if (gamepad1.right_bumper) {
+                    shintake.topIntake();
+                } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0){
+                    shintake.stopAll();
+                }
+            }
+
             if (result.isValid()) {
                 telemetry.addData("Is Valid?", result.isValid());
                 telemetry.addData("Target X", result.getTx());
@@ -124,8 +150,6 @@ public class AprilTagTest extends LinearOpMode{
             } else {
                 telemetry.addData("Limelight" , "No targets");
             }
-            telemetry.addData("PID Output", pidOutput);
-            telemetry.addData("Current Angle", getHeadingDegrees());
 
             telemetry.update();
         }
