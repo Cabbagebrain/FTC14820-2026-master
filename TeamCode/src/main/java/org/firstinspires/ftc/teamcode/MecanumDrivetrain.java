@@ -172,49 +172,4 @@ public class MecanumDrivetrain {
     }
 
 
-    /*
-    public void alignToShoot(LLResult result, double distance) {
-        double x = 0;
-        double y = 0;
-        double rx = 0;
-
-        if(result.isValid()) {
-            double DESIRED_AREA = distanceToArea(80.0);
-
-            double tx = result.getTx();
-            double ty = result.getTy();
-            double ta = result.getTa();
-
-
-            double headingError = tx;             // positive if tag is right of center
-            double areaError = DESIRED_AREA - ta; // positive if too far
-
-            double turnPower = -headingError * TURN_GAIN;  // rotate to center tag
-            double drivePower = areaError * SPEED_GAIN;    // move forward/back
-
-            // --- CLAMP & DEADZONE ---
-            double absTurn = Math.abs(turnPower);
-            if (absTurn < MIN_TURN_POWER && absTurn > 0.01)
-                turnPower = Math.copySign(MIN_TURN_POWER, turnPower);
-            if (absTurn > MAX_TURN_POWER) turnPower = Math.copySign(MAX_TURN_POWER, turnPower);
-
-            double absDrive = Math.abs(drivePower);
-            if (absDrive < MIN_DRIVE_POWER && absDrive > 0.01)
-                drivePower = Math.copySign(MIN_DRIVE_POWER, drivePower);
-            if (absDrive > MAX_DRIVE_POWER) drivePower = Math.copySign(MAX_DRIVE_POWER, drivePower);
-
-            // --- STOP CONDITIONS ---
-            boolean aligned = Math.abs(headingError) < TURN_TOLERANCE_DEG;
-            boolean atDistance = Math.abs(areaError) < AREA_TOLERANCE;
-            if (!aligned) {
-                rx = turnPower;
-            } else if (!atDistance) {
-                y = drivePower;
-                rx = turnPower * 0.5; // small correction while moving
-            } else {
-                stop();
-            }
-        }
-    }
-    */
 }

@@ -1,20 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.AREA_TOLERANCE;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_DRIVE_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_TURN_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_DRIVE_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_TURN_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_DISTANCE;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.REFERENCE_TA;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_GAIN;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_TOLERANCE_DEG;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.SPEED_GAIN;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KF;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
-
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -34,14 +19,6 @@ public class AprilTagTest extends LinearOpMode{
     private double x;
     private double y;
     private double rx;
-    // Adjust these numbers to suit your robot.
-    //todo: find these values
-    final double DESIRED_TX = 0.0;     // centered
-    final double DESIRED_TA = 2.5;     // tune this experimentally
-
-    final double MAX_AUTO_SPEED = 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
-    final double MAX_AUTO_STRAFE= 0.5;   //  Clip the strafing speed to this max value (adjust for your robot)
-    final double MAX_AUTO_TURN  = 0.3;   //  Clip the turn speed to this max value (adjust for your robot)
 
 
     @Override
@@ -51,6 +28,7 @@ public class AprilTagTest extends LinearOpMode{
         // Adjust the orientation parameters to match your robot
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                //TODO make this accurate to the new hub orientation
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
@@ -62,15 +40,7 @@ public class AprilTagTest extends LinearOpMode{
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
-
-
-        //todo: fine tune these constants & put into the Constants.java class
-        PIDController strafePID = new PIDController(0.035, 0.0, 0.003);
-        PIDController drivePID  = new PIDController(0.06,  0.0, 0.004);
-        PIDController headingPID= new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
-        strafePID.setDistTarget(0.0);        // tx centered
-        drivePID.setDistTarget(DESIRED_TA);  // desired tag area
-        headingPID.setAngleTarget(getHeadingDegrees()); // lock heading
+        AprilTag april = new AprilTag(drivetrain, imu);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -86,25 +56,24 @@ public class AprilTagTest extends LinearOpMode{
                 imu.resetYaw();
             }
 
+
             LLResult result = limelight.getLatestResult();
 
+            if (result.isValid()) {
+                telemetry.addData("Is Valid?", result.isValid());
+                telemetry.addData("Target X", result.getTx());
+                telemetry.addData("Target Y", result.getTy());
+                telemetry.addData("Target Area", result.getTa()); //percent of space an april tag takes up in the screen
+            } else {
+                telemetry.addData("Limelight" , "No targets");
+            }
+
+            telemetry.update();
+
             if (result.isValid() && gamepad1.a) {
-                double txError = result.getTx() - DESIRED_TX;
-                double taError = DESIRED_TA - result.getTa(); // inverted on purpose
-
-                // STRAFE PID (tx)
-                double strafePower = strafePID.calculateDriveOutput(result.getTx(), deltaTime);
-                // DRIVE PID (ta)
-                double drivePower = drivePID.calculateDriveOutput(result.getTa(), deltaTime);
-                // HEADING PID
-                double turnPower = headingPID.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
-
-                // Clamp outputs
-                strafePower = Range.clip(strafePower, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
-                drivePower  = Range.clip(drivePower,  -MAX_AUTO_SPEED,  MAX_AUTO_SPEED);
-                turnPower   = Range.clip(turnPower,   -MAX_AUTO_TURN,   MAX_AUTO_TURN);
-
-                drivetrain.setPower(imu, strafePower, drivePower, turnPower);
+                april.alignToShoot(result, deltaTime);
+            } else if (result.isValid() && gamepad1.b) {
+                april.faceTag(result, deltaTime);
             } else {
                 y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 x = gamepad1.left_stick_x;
@@ -142,17 +111,6 @@ public class AprilTagTest extends LinearOpMode{
                     shintake.stopAll();
                 }
             }
-
-            if (result.isValid()) {
-                telemetry.addData("Is Valid?", result.isValid());
-                telemetry.addData("Target X", result.getTx());
-                telemetry.addData("Target Y", result.getTy());
-                telemetry.addData("Target Area", result.getTa()); //percent of space an april tag takes up in the screen
-            } else {
-                telemetry.addData("Limelight" , "No targets");
-            }
-
-            telemetry.update();
         }
     }
     private double getHeadingDegrees() {
