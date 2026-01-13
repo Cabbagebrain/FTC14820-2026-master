@@ -1,10 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KF;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
-
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -15,6 +10,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Roadrunner.drive.SampleMecanumDrive;
+
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KF;
+
 
 @Autonomous (name = "Whitewater", group = "Autonomous")
 public class Whitewater extends LinearOpMode {
@@ -38,7 +39,7 @@ public class Whitewater extends LinearOpMode {
         limelight.start(); // This tells Limelight to start looking!
 
         //init PID
-        PIDController pidController = new PIDController(KP, KI, KD);
+        PIDController pidController = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
 
         //init subsystems
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
@@ -62,7 +63,7 @@ public class Whitewater extends LinearOpMode {
             // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
             if (Math.abs(pidOutput) > 0.01) {
                 // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(KF, pidOutput);
+                correction += Math.copySign(HEADING_KF, pidOutput);
             }
 
 

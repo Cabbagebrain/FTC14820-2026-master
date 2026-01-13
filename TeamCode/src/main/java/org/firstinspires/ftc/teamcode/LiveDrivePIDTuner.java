@@ -123,6 +123,8 @@ public class LiveDrivePIDTuner extends LinearOpMode {
             }
 
             pidController.setPID(Kp, Ki, Kd);  // Update PID with new values
+
+
             if (gamepad1.a) {
                 frontLeft.setPower(fl);
                 frontRight.setPower(fr);
@@ -133,6 +135,7 @@ public class LiveDrivePIDTuner extends LinearOpMode {
             // Telemetry
             telemetry.addData("Target Distance (in)", pidController.getTarget());
             telemetry.addData("Current Distance (in)", currentDistance);
+            telemetry.addData("Current Error (in)", currentDistance/pidController.getTarget());
             telemetry.addData("PID Output", pidOutput);
             telemetry.addData("Kp", Kp);
             telemetry.addData("Ki", Ki);

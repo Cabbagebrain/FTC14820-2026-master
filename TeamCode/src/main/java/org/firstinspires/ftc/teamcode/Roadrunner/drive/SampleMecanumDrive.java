@@ -48,18 +48,19 @@ import static org.firstinspires.ftc.teamcode.Roadrunner.drive.DriveConstants.enc
 import static org.firstinspires.ftc.teamcode.Roadrunner.drive.DriveConstants.kA;
 import static org.firstinspires.ftc.teamcode.Roadrunner.drive.DriveConstants.kStatic;
 import static org.firstinspires.ftc.teamcode.Roadrunner.drive.DriveConstants.kV;
-import static org.firstinspires.ftc.teamcode.Roadrunner.drive.DriveConstants.kV;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KP;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KI;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.KD;
+
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
+import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
 
 /*
  * Simple mecanum drive hardware implementation for REV hardware.
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(KP, KI, KD);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(KP, KI, KD);
+    //TODO: create new PID controller for translational pid
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(HEADING_KP, HEADING_KI, HEADING_KD);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(HEADING_KP, HEADING_KI, HEADING_KD);
 
     public static double LATERAL_MULTIPLIER = 1;
 

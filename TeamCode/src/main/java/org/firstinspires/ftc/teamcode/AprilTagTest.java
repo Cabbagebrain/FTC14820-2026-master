@@ -51,7 +51,6 @@ public class AprilTagTest extends LinearOpMode{
         // Adjust the orientation parameters to match your robot
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                //TODO make this accurate to the new hub orientation
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
@@ -64,6 +63,8 @@ public class AprilTagTest extends LinearOpMode{
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
 
+
+        //todo: fine tune these constants & put into the Constants.java class
         PIDController strafePID = new PIDController(0.035, 0.0, 0.003);
         PIDController drivePID  = new PIDController(0.06,  0.0, 0.004);
         PIDController headingPID= new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
