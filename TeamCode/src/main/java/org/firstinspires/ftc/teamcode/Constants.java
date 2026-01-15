@@ -16,8 +16,8 @@ public class Constants {
     }
     public static class AprilConstants {
         //TODO: calibrate these
-        public static final double DESIRED_TX = 0.0;     // centered
-        public static final double DESIRED_TA = 2.5;     // tune this experimentally
+        public static final double DESIRED_TX = 2.8689;     // centered
+        public static final double DESIRED_TA = 1.4592;     // tune this experimentally
 
         public static final double MAX_AUTO_SPEED = 0.5;   //  Clip the approach speed to this max value (adjust for your robot)
         public static final double MAX_AUTO_STRAFE= 0.5;   //  Clip the strafing speed to this max value (adjust for your robot)

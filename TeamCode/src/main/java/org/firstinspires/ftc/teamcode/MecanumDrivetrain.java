@@ -1,14 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.AREA_TOLERANCE;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_DRIVE_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MAX_TURN_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_DRIVE_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.MIN_TURN_POWER;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.SPEED_GAIN;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_GAIN;
-import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.TURN_TOLERANCE_DEG;
-
 import static java.lang.Thread.sleep;
 
 import com.qualcomm.hardware.limelightvision.LLResult;

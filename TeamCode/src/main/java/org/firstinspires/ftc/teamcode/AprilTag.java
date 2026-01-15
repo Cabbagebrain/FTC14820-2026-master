@@ -46,8 +46,6 @@ public class AprilTag {
             drivetrain.setPower(imu, 0, 0, 0);
         }
     }
-
-    //TODO: create lineup
     public void alignToShoot(LLResult result, double deltaTime) {
         strafePID.setDistTarget(0.0);        // tx centered
         drivePID.setDistTarget(DESIRED_TA);  // desired tag area
