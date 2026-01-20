@@ -70,11 +70,20 @@ public class AprilTagTest extends LinearOpMode{
 
             telemetry.update();
 
-            if (result.isValid() && gamepad1.a) {
-                april.alignToShoot(result, deltaTime);
-            } else if (result.isValid() && gamepad1.b) {
-                april.faceTag(result, deltaTime);
-            } else {
+            boolean isAligning = false;
+
+            if(result.isValid()) {
+                if (gamepad1.a) {
+                    april.alignToShoot(result, deltaTime);
+                    isAligning = true;
+                }
+                if (gamepad1.b) {
+                    april.faceTag(result, deltaTime);
+                    isAligning = true;
+                }
+            }
+
+            if (!isAligning) {
                 y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 x = gamepad1.left_stick_x;
                 rx = gamepad1.right_stick_x;

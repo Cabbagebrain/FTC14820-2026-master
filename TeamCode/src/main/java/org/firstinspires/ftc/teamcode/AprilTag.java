@@ -34,10 +34,8 @@ public class AprilTag {
     }
 
     public void faceTag(LLResult result, double deltaTime) {
-        PIDController headingPID = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
         double currentHeading = getHeadingDegrees(imu);
-        double desiredHeading = currentHeading + result.getTx();
-        headingPID.setAngleTarget(desiredHeading);
+        headingPID.setAngleTarget(0);
 
         double rx = headingPID.calculateHeadingOutput(currentHeading, deltaTime);
         rx = Range.clip(rx, -0.3, 0.3);
@@ -47,26 +45,23 @@ public class AprilTag {
         }
     }
     public void alignToShoot(LLResult result, double deltaTime) {
-        strafePID.setDistTarget(0.0);        // tx centered
+        strafePID.setDistTarget(DESIRED_TX);        // tx centered
         drivePID.setDistTarget(DESIRED_TA);  // desired tag area
-        headingPID.setAngleTarget(getHeadingDegrees(imu)); // lock heading
-
-        double txError = result.getTx() - DESIRED_TX;
-        double taError = DESIRED_TA - result.getTa(); // inverted on purpose
+        headingPID.setAngleTarget(0); // lock heading
 
         // STRAFE PID (tx)
         double strafePower = strafePID.calculateDriveOutput(result.getTx(), deltaTime);
         // DRIVE PID (ta)
         double drivePower = drivePID.calculateDriveOutput(result.getTa(), deltaTime);
         // HEADING PID
-        double turnPower = headingPID.calculateHeadingOutput(getHeadingDegrees(imu), deltaTime);
+        double turnPower = headingPID.calculateHeadingOutput(result.getTx(), deltaTime);
 
         // Clamp outputs
         strafePower = Range.clip(strafePower, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
         drivePower  = Range.clip(drivePower,  -MAX_AUTO_SPEED,  MAX_AUTO_SPEED);
         turnPower   = Range.clip(turnPower,   -MAX_AUTO_TURN,   MAX_AUTO_TURN);
 
-        drivetrain.setPower(imu, strafePower, drivePower, turnPower);
+        drivetrain.setPower(null, strafePower, drivePower, turnPower);
     }
     private double getHeadingDegrees(IMU imu) {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
