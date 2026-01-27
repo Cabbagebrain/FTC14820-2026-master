@@ -1,37 +1,32 @@
-package org.firstinspires.ftc.teamcode;
+/*package org.firstinspires.ftc.teamcode;
 
+
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
-import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KF;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
 
 import static java.lang.Math.toRadians;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Roadrunner.trajectorysequence.TrajectorySequence;
 
-import java.util.Vector;
+@Autonomous(name = "Red Goal Auto", group = "Autonomous")
+public class RedGoalAuto {
 
-@Autonomous (name = "Blue Goal Auto", group = "Autonomous")
-public class BlueGoalAuto extends LinearOpMode {
     private IMU imu;
     private double lastLoopTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
         //Retrieve the IMU from the hardware map
-                imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
@@ -43,7 +38,6 @@ public class BlueGoalAuto extends LinearOpMode {
         Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         limelight.start(); // This tells Limelight to start looking!
-
         //init PID
         PIDController pidController = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
 
@@ -52,37 +46,33 @@ public class BlueGoalAuto extends LinearOpMode {
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
-
-        Pose2d initialPose = new Pose2d(-41, 47, toRadians(45));
+        Pose2d initialPose = new Pose2d(41, 47, toRadians(45));
         drive.setPoseEstimate(initialPose);
 
-         TrajectorySequence start1= drive.trajectorySequenceBuilder(initialPose)
-                .back(55 )
+        TrajectorySequence start1= drive.trajectorySequenceBuilder(initialPose)
+                .back(64.5 )
                 .build();
 
-        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(start1.end())
-                .turn(toRadians(80))
+        TrajectorySequence traj1 = drive.trajectorySequenceBuilder(start1.end())
+                .turn(toRadians(-70))
                 .build();
 
-        TrajectorySequence forwards = drive.trajectorySequenceBuilder(traj2.end())
-                .forward(40.0)
+        TrajectorySequence forwards = drive.trajectorySequenceBuilder(traj1.end())
+                .forward(10.0)
                 .build();
 
         TrajectorySequence backwards = drive.trajectorySequenceBuilder(forwards.end())
-                .back(40.0)
+                .back(10.0)
                 .build();
-        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(backwards.end())
-                .turn(toRadians(-84))
+TrajectorySequence traj2 = drive.trajectorySequenceBuilder(backwards.end())
+                .turn(toRadians(70.0))
                 .build();
 
 
-        ElapsedTime runtime = new ElapsedTime();
-        waitForStart();
 
-        if (isStopRequested()) return;
 
-        if(opModeIsActive()) {
+
+if(opModeIsActive()) {
             double currentTime = runtime.seconds();
             double deltaTime = currentTime - lastLoopTime;
             lastLoopTime = currentTime;
@@ -99,16 +89,31 @@ public class BlueGoalAuto extends LinearOpMode {
             while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
                 drive.update();
 
-            }
-            shintake.runIntake(1);
+                shintake.runIntake(1);
             shintake.runFlywheel(.60);
             Thread.sleep(5000);
             ramp.liftRamp();
             Thread.sleep(4000);
-          //  shintake.stopAll();
+
             ramp.dropRamp();
 
-            drive.followTrajectorySequenceAsync(traj2);
+            drive.followTrajectorySequenceAsync(traj1);
+            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
+                drive.update();
+
+            drive.followTrajectorySequenceAsync(forwards);
+            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
+                drive.update();
+
+            }
+            shintake.runIntake(1);
+            Thread.sleep(4000);
+            ramp.liftRamp();
+            shintake.runFlywheel(.75);
+            Thread.sleep(1000);
+            shintake.stopAll();
+            ramp.dropRamp();
+ drive.followTrajectorySequenceAsync(traj2);
             while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
                 drive.update();
             }
@@ -137,12 +142,7 @@ public class BlueGoalAuto extends LinearOpMode {
 
 
 
-
         }
 
     }
-    private double getHeadingDegrees() {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        return orientation.getYaw(AngleUnit.DEGREES);
-    }
-}
+*/

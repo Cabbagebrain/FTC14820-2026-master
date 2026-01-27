@@ -107,6 +107,7 @@ public class RobotContainer extends LinearOpMode {
                 shintake.stopAll();
             }
 
+            /*
             LLResult result = limelight.getLatestResult();
 
             if (result.isValid()) {
@@ -116,6 +117,8 @@ public class RobotContainer extends LinearOpMode {
             } else {
                 telemetry.addData("Limelight" , "No targets");
             }
+             */
+
             telemetry.addData("PID Output", pidOutput);
             telemetry.addData("Current Angle", getHeadingDegrees());
 
