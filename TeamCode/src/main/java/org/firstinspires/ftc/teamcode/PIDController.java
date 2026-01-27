@@ -61,13 +61,12 @@ public class PIDController {
 
         integral += error * deltaTime;
         integral = Math.max(-0.5, Math.min(0.5, integral)); // anti-windup clamp
-
         double derivative = (error - previousError) / deltaTime;
         previousError = error;
 
         double output = (kp * error) + (ki * integral) + (kd * derivative);
         output = Math.max(-1.0, Math.min(1.0, output));
-        return -output;
+        return output;
     }
 
     //calculates PID output power for heading

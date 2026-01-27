@@ -14,7 +14,6 @@ public class ShintakeSubsystem {
         flywheelL = hardwareMap.get(DcMotor.class, "left flywheel"); //port 2
         internalIntake = hardwareMap.get(DcMotor.class, "internal intake"); //port 3
 
-        internalIntake.setDirection(DcMotor.Direction.REVERSE);
         flywheelL.setDirection(DcMotor.Direction.REVERSE);
 
         RBintake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
