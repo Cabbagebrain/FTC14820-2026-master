@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -13,6 +15,7 @@ public class TagTrackTest extends LinearOpMode {
     private IMU imu;
     private double lastLoopTime;
     private Limelight3A limelight;
+    private GamepadEx gamepadEx;
     private double x;
     private double y;
     private double rx;
@@ -35,6 +38,7 @@ public class TagTrackTest extends LinearOpMode {
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
         AprilTag april = new AprilTag(drivetrain, imu);
+        gamepadEx = new GamepadEx(gamepad1);
 
         ElapsedTime runtime = new ElapsedTime();
         waitForStart();
@@ -52,14 +56,13 @@ public class TagTrackTest extends LinearOpMode {
 
             TagTrackDrive tagTrackDrive = new TagTrackDrive(drivetrain, april, telemetry, () -> gamepad1.left_stick_x, () -> gamepad1.left_stick_y, limelight.getLatestResult(), deltaTime);
 
-            if (gamepad1.a) {
-                tagTrackDrive.execute();
-            } else {
                 y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 x = gamepad1.left_stick_x;
                 rx = gamepad1.right_stick_x;
 
                 drivetrain.setPower(imu, x, y, rx);
+
+                gamepadEx.getGamepadButton(GamepadKeys.Button.A).whileHeld(tagTrackDrive);
 
                 if (gamepad1.left_bumper) {
                     drivetrain.slowDrive();
@@ -91,18 +94,20 @@ public class TagTrackTest extends LinearOpMode {
                 } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0){
                     shintake.stopAll();
                 }
-            }
 
             LLResult result = limelight.getLatestResult();
 
-            if (result.isValid()) {
-                telemetry.addData("Is Valid?", result.isValid());
+            telemetry.addData("Fiducial count: ", result.getFiducialResults().size());
+            telemetry.addData("Valid: ", result.isValid());
+            telemetry.addData("Pipeline: ", result.getPipelineIndex());
+            telemetry.addData("Latency: ", result.getParseLatency());
+
+            if (!result.getFiducialResults().isEmpty()) {
                 telemetry.addData("Target X", result.getTx());
                 telemetry.addData("Target Y", result.getTy());
                 telemetry.addData("Target Area", result.getTa()); //percent of space an april tag takes up in the screen
-            } else {
-                telemetry.addData("Limelight", "No targets");
             }
+
             telemetry.update();
 
         }

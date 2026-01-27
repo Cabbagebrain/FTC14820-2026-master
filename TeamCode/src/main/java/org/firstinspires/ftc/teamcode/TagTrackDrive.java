@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.DESIRED_TA;
+import static org.firstinspires.ftc.teamcode.Constants.AprilConstants.DESIRED_TX;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KD;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KI;
 import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP;
@@ -40,9 +41,7 @@ public class TagTrackDrive extends CommandBase {
         this.ll = ll;
         this.deltaTime = deltaTime;
         headingPID = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
-        headingPID.setAngleTarget(0);
-
-        addRequirements((Subsystem) drivetrain);
+        headingPID.setAngleTarget(DESIRED_TX);
     }
 
     @Override
@@ -50,16 +49,14 @@ public class TagTrackDrive extends CommandBase {
         double strafe = strafeSupplier.getAsDouble();
         double drive = driveSupplier.getAsDouble();
         double turn = 0;
-        double distance = 0; //placeholder
 
-        if (ll.isValid()) {
+        if (ll.isValid() && !ll.getFiducialResults().isEmpty()) {
             double tx = ll.getTx();
             double ta = ll.getTa();
 
             if (Math.abs(tx) > 1) {
                 turn = -headingPID.calculateHeadingOutput(tx, deltaTime);
             }
-
 
             // Assist forward motion only if driver isn't moving
             if (Math.abs(drive) < 0.05) {
@@ -71,7 +68,6 @@ public class TagTrackDrive extends CommandBase {
                     drive = 0.0;
                 }
             }
-
 
             telemetry.addData("tx", tx);
             telemetry.addData("ta", ta);
