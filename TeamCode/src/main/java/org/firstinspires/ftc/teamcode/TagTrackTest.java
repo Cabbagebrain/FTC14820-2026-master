@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -10,15 +11,19 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 @TeleOp
 public class TagTrackTest extends LinearOpMode {
     private IMU imu;
-    private double lastLoopTime;
     private Limelight3A limelight;
     private GamepadEx gamepadEx;
     private double x;
     private double y;
     private double rx;
+    private ElapsedTime runtime;
+    private double lastLoopTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -32,37 +37,49 @@ public class TagTrackTest extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
+        limelight.pipelineSwitch(0);        // force AprilTag pipeline
         limelight.start(); // This tells Limelight to start looking!
+        Supplier<LLResult> llSupplier = () -> limelight.getLatestResult();
+
+        runtime = new ElapsedTime();
+        lastLoopTime = runtime.seconds();
+        DoubleSupplier deltaTimeSupplier = () -> {
+            double currentTime = runtime.seconds();
+            double dt = currentTime - lastLoopTime;
+            lastLoopTime = currentTime;
+            return dt;
+        };
 
         MecanumDrivetrain drivetrain = new MecanumDrivetrain(hardwareMap);
         RampSubsystem ramp = new RampSubsystem(hardwareMap);
         ShintakeSubsystem shintake = new ShintakeSubsystem(hardwareMap);
         AprilTag april = new AprilTag(drivetrain, imu);
         gamepadEx = new GamepadEx(gamepad1);
+        TagTrackDrive tagTrackDrive = new TagTrackDrive(drivetrain, april, telemetry, () -> gamepad1.left_stick_x, () -> gamepad1.left_stick_y, llSupplier, deltaTimeSupplier);
 
-        ElapsedTime runtime = new ElapsedTime();
         waitForStart();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double currentTime = runtime.seconds();
-            double deltaTime = currentTime - lastLoopTime;
-            lastLoopTime = currentTime;
-
             if (gamepad1.left_stick_button) {
                 imu.resetYaw();
             }
 
-            TagTrackDrive tagTrackDrive = new TagTrackDrive(drivetrain, april, telemetry, () -> gamepad1.left_stick_x, () -> gamepad1.left_stick_y, limelight.getLatestResult(), deltaTime);
+            if (gamepad1.a) {
+                if (!tagTrackDrive.isScheduled()) {
+                    CommandScheduler.getInstance().schedule(tagTrackDrive);
+                }
+            } else {
+                CommandScheduler.getInstance().cancel(tagTrackDrive);
+                // manual control
+            }
 
                 y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 x = gamepad1.left_stick_x;
                 rx = gamepad1.right_stick_x;
 
                 drivetrain.setPower(imu, x, y, rx);
-
-                gamepadEx.getGamepadButton(GamepadKeys.Button.A).whileHeld(tagTrackDrive);
 
                 if (gamepad1.left_bumper) {
                     drivetrain.slowDrive();
@@ -79,7 +96,7 @@ public class TagTrackTest extends LinearOpMode {
 
                 if (gamepad1.right_trigger > 0) {
                     shintake.runFlywheel(.7);
-                } else if (gamepad1.right_trigger == 0 && !gamepad1.right_bumper){
+                } else if (gamepad1.right_trigger == 0 && !gamepad1.right_bumper) {
                     shintake.stopFlywheel();
                 }
 
@@ -91,11 +108,13 @@ public class TagTrackTest extends LinearOpMode {
 
                 if (gamepad1.right_bumper) {
                     shintake.topIntake();
-                } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0){
+                } else if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0) {
                     shintake.stopAll();
                 }
+            }
 
-            LLResult result = limelight.getLatestResult();
+            CommandScheduler.getInstance().run();
+            LLResult result = llSupplier.get();
 
             telemetry.addData("Fiducial count: ", result.getFiducialResults().size());
             telemetry.addData("Valid: ", result.isValid());
@@ -112,4 +131,3 @@ public class TagTrackTest extends LinearOpMode {
 
         }
     }
-}

@@ -13,6 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 public class TagTrackDrive extends CommandBase {
     private MecanumDrivetrain drivetrain;
@@ -20,10 +21,9 @@ public class TagTrackDrive extends CommandBase {
     private Telemetry telemetry;
     private DoubleSupplier strafeSupplier;
     private DoubleSupplier driveSupplier;
-
-    private LLResult ll;
+    private Supplier<LLResult> llSupplier;
     private PIDController headingPID;
-    private double deltaTime;
+    private DoubleSupplier deltaTimeSupplier;
     private static final double STOPPING_DISTANCE_THRESHOLD = 6.0;
 
     public TagTrackDrive (MecanumDrivetrain drive,
@@ -31,15 +31,15 @@ public class TagTrackDrive extends CommandBase {
                           Telemetry telemetry,
                           DoubleSupplier strafeSupplier,
                           DoubleSupplier driveSupplier,
-                          LLResult ll,
-                          double deltaTime) {
+                          Supplier<LLResult> llSupplier,
+                          DoubleSupplier deltaTime) {
         drivetrain = drive;
         this.april = april;
         this.telemetry = telemetry;
         this.strafeSupplier = strafeSupplier;
         this.driveSupplier = driveSupplier;
-        this.ll = ll;
-        this.deltaTime = deltaTime;
+        this.llSupplier = llSupplier;
+        this.deltaTimeSupplier= deltaTime;
         headingPID = new PIDController(HEADING_KP, HEADING_KI, HEADING_KD);
         headingPID.setAngleTarget(DESIRED_TX);
     }
@@ -50,12 +50,12 @@ public class TagTrackDrive extends CommandBase {
         double drive = driveSupplier.getAsDouble();
         double turn = 0;
 
-        if (ll.isValid() && !ll.getFiducialResults().isEmpty()) {
-            double tx = ll.getTx();
-            double ta = ll.getTa();
+        if (!llSupplier.get().getFiducialResults().isEmpty()) {
+            double tx = llSupplier.get().getTx();
+            double ta = llSupplier.get().getTa();
 
             if (Math.abs(tx) > 1) {
-                turn = -headingPID.calculateHeadingOutput(tx, deltaTime);
+                turn = -headingPID.calculateHeadingOutput(tx, deltaTimeSupplier.getAsDouble());
             }
 
             // Assist forward motion only if driver isn't moving
@@ -68,17 +68,7 @@ public class TagTrackDrive extends CommandBase {
                     drive = 0.0;
                 }
             }
-
-            telemetry.addData("tx", tx);
-            telemetry.addData("ta", ta);
-            telemetry.addData("strafe", strafe);
-            telemetry.addData("drive", drive);
-            telemetry.addData("turn", turn);
-        } else {
-            telemetry.addData("Limelight", "No targets");
         }
-        drivetrain.setPower(null, strafe, drive, turn);
-        telemetry.update();
     }
 
     @Override
