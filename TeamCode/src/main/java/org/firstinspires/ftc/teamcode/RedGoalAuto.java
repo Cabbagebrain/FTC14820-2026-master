@@ -1,4 +1,4 @@
-/*package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode;
 
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
@@ -13,12 +13,12 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Roadrunner.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Roadrunner.trajectorysequence.TrajectorySequence;
-
 @Autonomous(name = "Red Goal Auto", group = "Autonomous")
-public class RedGoalAuto {
+public class RedGoalAuto extends LinearOpMode{
 
     private IMU imu;
     private double lastLoopTime;
@@ -50,99 +50,48 @@ public class RedGoalAuto {
         drive.setPoseEstimate(initialPose);
 
         TrajectorySequence start1= drive.trajectorySequenceBuilder(initialPose)
-                .back(64.5 )
+                .back(64.5)
                 .build();
 
         TrajectorySequence traj1 = drive.trajectorySequenceBuilder(start1.end())
                 .turn(toRadians(-70))
-                .build();
-
-        TrajectorySequence forwards = drive.trajectorySequenceBuilder(traj1.end())
                 .forward(10.0)
-                .build();
-
-        TrajectorySequence backwards = drive.trajectorySequenceBuilder(forwards.end())
                 .back(10.0)
-                .build();
-TrajectorySequence traj2 = drive.trajectorySequenceBuilder(backwards.end())
                 .turn(toRadians(70.0))
                 .build();
 
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end())
+                .turn(toRadians(90))
+                .forward(10)
+                .build();
 
-
-
-
-if(opModeIsActive()) {
-            double currentTime = runtime.seconds();
-            double deltaTime = currentTime - lastLoopTime;
-            lastLoopTime = currentTime;
-
-            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
-            // APPLY FEEDFORWARD (KF)
-            double correction = pidOutput;
-            // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
-            if (Math.abs(pidOutput) > 0.01) {
-                // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(HEADING_KF, pidOutput);
-            }
+        if(opModeIsActive()) {
             drive.followTrajectorySequenceAsync(start1);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
+            while (opModeIsActive() && !isStopRequested()) {
                 drive.update();
+            }
 
-                shintake.runIntake(1);
-            shintake.runFlywheel(.60);
-            Thread.sleep(5000);
+            shintake.runIntake(1);
+            shintake.runFlywheel(.67);
+            Thread.sleep(3000);
             ramp.liftRamp();
-            Thread.sleep(4000);
-
+            Thread.sleep(3000);
             ramp.dropRamp();
 
             drive.followTrajectorySequenceAsync(traj1);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
+            while (opModeIsActive() && !isStopRequested()) {
                 drive.update();
-
-            drive.followTrajectorySequenceAsync(forwards);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
-                drive.update();
-
             }
-            shintake.runIntake(1);
-            Thread.sleep(4000);
             ramp.liftRamp();
-            shintake.runFlywheel(.75);
-            Thread.sleep(1000);
+            Thread.sleep(3000);
             shintake.stopAll();
-            ramp.dropRamp();
- drive.followTrajectorySequenceAsync(traj2);
-            while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
-                drive.update();
-            }
-
-            drive.followTrajectorySequenceAsync(forwards);
-            while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
-                drive.update();
-            }
-            shintake.runIntake(1);
-            drive.followTrajectorySequenceAsync(backwards);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
-                drive.update();
-            };
-            drive.followTrajectorySequenceAsync(traj3);
-            while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
-                drive.update();
-            }
-
-            shintake.runIntake(1);
-            shintake.runFlywheel(.59);
-           // Thread.sleep(5000);
-            ramp.liftRamp();
-            Thread.sleep(4000);
             ramp.dropRamp();
             shintake.stopAll();
 
-
-
+            drive.followTrajectorySequenceAsync(traj2);
+            while (opModeIsActive() && !isStopRequested()) {
+                drive.update();
+            }
         }
-
     }
-*/
+}

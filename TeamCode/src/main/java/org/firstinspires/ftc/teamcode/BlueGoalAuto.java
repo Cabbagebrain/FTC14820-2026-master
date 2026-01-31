@@ -8,7 +8,6 @@ import static org.firstinspires.ftc.teamcode.Constants.DriveConstants.HEADING_KP
 import static java.lang.Math.toRadians;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -58,54 +57,31 @@ public class BlueGoalAuto extends LinearOpMode {
         drive.setPoseEstimate(initialPose);
 
          TrajectorySequence start1= drive.trajectorySequenceBuilder(initialPose)
-                .back(55 )
+                .back(64.5)
                 .build();
 
         TrajectorySequence traj2 = drive.trajectorySequenceBuilder(start1.end())
                 .turn(toRadians(80))
-                .build();
-
-        TrajectorySequence forwards = drive.trajectorySequenceBuilder(traj2.end())
                 .forward(40.0)
-                .build();
-
-        TrajectorySequence backwards = drive.trajectorySequenceBuilder(forwards.end())
                 .back(40.0)
                 .build();
-        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(backwards.end())
+
+        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(traj2.end())
                 .turn(toRadians(-84))
+                .forward(10)
                 .build();
 
 
-        ElapsedTime runtime = new ElapsedTime();
         waitForStart();
-
         if (isStopRequested()) return;
 
         if(opModeIsActive()) {
-            double currentTime = runtime.seconds();
-            double deltaTime = currentTime - lastLoopTime;
-            lastLoopTime = currentTime;
-
-            double pidOutput = pidController.calculateHeadingOutput(getHeadingDegrees(), deltaTime);
-            // APPLY FEEDFORWARD (KF)
-            double correction = pidOutput;
-            // Only apply Feedforward if the PID is commanding movement above a small threshold (0.01).
-            if (Math.abs(pidOutput) > 0.01) {
-                // Add KF in the direction of the correction (using Math.copySign).
-                correction += Math.copySign(HEADING_KF, pidOutput);
-            }
-            drive.followTrajectorySequenceAsync(start1);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
-                drive.update();
-
-            }
             shintake.runIntake(1);
-            shintake.runFlywheel(.60);
-            Thread.sleep(5000);
+            shintake.runFlywheel(.67);
+            Thread.sleep(3000);
             ramp.liftRamp();
-            Thread.sleep(4000);
-          //  shintake.stopAll();
+            Thread.sleep(3000);
+            //shintake.stopAll();
             ramp.dropRamp();
 
             drive.followTrajectorySequenceAsync(traj2);
@@ -113,33 +89,16 @@ public class BlueGoalAuto extends LinearOpMode {
                 drive.update();
             }
 
-            drive.followTrajectorySequenceAsync(forwards);
-            while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
-                drive.update();
-            }
-            shintake.runIntake(1);
-            drive.followTrajectorySequenceAsync(backwards);
-            while (opModeIsActive() && !isStopRequested()&&drive.isBusy()) {
-                drive.update();
-            };
+            ramp.liftRamp();
+            Thread.sleep(3000);
+            ramp.dropRamp();
+            shintake.stopAll();
+
             drive.followTrajectorySequenceAsync(traj3);
             while (opModeIsActive() && !isStopRequested()&& drive.isBusy()) {
                 drive.update();
             }
-
-            shintake.runIntake(1);
-            shintake.runFlywheel(.59);
-           // Thread.sleep(5000);
-            ramp.liftRamp();
-            Thread.sleep(4000);
-            ramp.dropRamp();
-            shintake.stopAll();
-
-
-
-
         }
-
     }
     private double getHeadingDegrees() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();

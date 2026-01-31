@@ -116,18 +116,30 @@ public class TagTrackTest extends LinearOpMode {
             CommandScheduler.getInstance().run();
             LLResult result = llSupplier.get();
 
-            telemetry.addData("Fiducial count: ", result.getFiducialResults().size());
-            telemetry.addData("Valid: ", result.isValid());
-            telemetry.addData("Pipeline: ", result.getPipelineIndex());
-            telemetry.addData("Latency: ", result.getParseLatency());
+        // Comprehensive diagnostics
+        telemetry.addData("1. Result null?", result == null);
+
+        if (result != null) {
+            telemetry.addData("2. Is Valid", result.isValid());
+            telemetry.addData("3. Pipeline Index", result.getPipelineIndex());
+            telemetry.addData("4. Pipeline Type", result.getPipelineType());
+            telemetry.addData("5. Fiducial Count", result.getFiducialResults().size());
+            telemetry.addData("6. Latency (ms)", result.getParseLatency());
+            telemetry.addData("7. Timestamp", result.getTimestamp());
 
             if (!result.getFiducialResults().isEmpty()) {
-                telemetry.addData("Target X", result.getTx());
-                telemetry.addData("Target Y", result.getTy());
-                telemetry.addData("Target Area", result.getTa()); //percent of space an april tag takes up in the screen
+                telemetry.addData("8. TX", result.getTx());
+                telemetry.addData("9. TY", result.getTy());
+                telemetry.addData("10. TA", result.getTa());
+            } else {
+                telemetry.addData("8. Status", "NO FIDUCIALS DETECTED");
             }
+        } else {
+            telemetry.addData("ERROR", "Result is NULL!");
+        }
 
-            telemetry.update();
+        telemetry.update();
+        sleep(100); // Slow down updates
 
         }
     }
