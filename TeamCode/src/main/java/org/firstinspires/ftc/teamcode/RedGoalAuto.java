@@ -67,7 +67,7 @@ public class RedGoalAuto extends LinearOpMode{
 
         if(opModeIsActive()) {
             drive.followTrajectorySequenceAsync(start1);
-            while (opModeIsActive() && !isStopRequested()) {
+            while (opModeIsActive() && !isStopRequested() && drive.isBusy()) {
                 drive.update();
             }
 
@@ -79,7 +79,7 @@ public class RedGoalAuto extends LinearOpMode{
             ramp.dropRamp();
 
             drive.followTrajectorySequenceAsync(traj1);
-            while (opModeIsActive() && !isStopRequested()) {
+            while (opModeIsActive() && !isStopRequested() && drive.isBusy()) {
                 drive.update();
             }
             ramp.liftRamp();
@@ -89,7 +89,7 @@ public class RedGoalAuto extends LinearOpMode{
             shintake.stopAll();
 
             drive.followTrajectorySequenceAsync(traj2);
-            while (opModeIsActive() && !isStopRequested()) {
+            while (opModeIsActive() && !isStopRequested() && drive.isBusy()) {
                 drive.update();
             }
         }

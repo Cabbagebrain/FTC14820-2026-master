@@ -76,6 +76,11 @@ public class BlueGoalAuto extends LinearOpMode {
         if (isStopRequested()) return;
 
         if(opModeIsActive()) {
+            drive.followTrajectorySequenceAsync(start1);
+            while (opModeIsActive() && !isStopRequested() && drive.isBusy()) {
+                drive.update();
+            }
+
             shintake.runIntake(1);
             shintake.runFlywheel(.67);
             Thread.sleep(3000);
